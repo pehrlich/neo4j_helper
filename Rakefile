@@ -16,9 +16,9 @@ Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "neo4j_helper"
   gem.homepage = "http://github.com/pehrlich/neo4j_helper"
-  gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.license = "WTFPL"
+  gem.summary = %Q{Making neo4j gem mo' spiffy for your data-nomming needs}
+  gem.description = %Q{Attemting to minimize the syntactical learning curve from other ORMs}
   gem.email = "peter.i.ehrlich@gmail.com"
   gem.authors = ["Peter Ehrlich"]
   # dependencies defined in Gemfile
@@ -30,14 +30,6 @@ Rake::TestTask.new(:test) do |test|
   test.libs << 'lib' << 'test'
   test.pattern = 'test/**/test_*.rb'
   test.verbose = true
-end
-
-require 'rcov/rcovtask'
-Rcov::RcovTask.new do |test|
-  test.libs << 'test'
-  test.pattern = 'test/**/test_*.rb'
-  test.verbose = true
-  test.rcov_opts << '--exclude "gems/*"'
 end
 
 task :default => :test

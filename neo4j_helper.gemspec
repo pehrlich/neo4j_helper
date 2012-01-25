@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{neo4j_helper}
+  s.name = "neo4j_helper"
   s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = [%q{Peter Ehrlich}]
-  s.date = %q{2012-01-25}
-  s.description = %q{Attemting to minimize the syntactical learning curve from other ORMs}
-  s.email = %q{peter.i.ehrlich@gmail.com}
+  s.authors = ["Peter Ehrlich"]
+  s.date = "2012-01-25"
+  s.description = "Attemting to minimize the syntactical learning curve from other ORMs"
+  s.email = "peter.i.ehrlich@gmail.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.md"
@@ -28,14 +28,15 @@ Gem::Specification.new do |s|
     "lib/neo4j_helper/accepts_hash_for.rb",
     "lib/neo4j_helper/misc.rb",
     "lib/neo4j_helper/serialize.rb",
+    "neo4j_helper.gemspec",
     "test/helper.rb",
     "test/test_neo4j_helper.rb"
   ]
-  s.homepage = %q{http://github.com/pehrlich/neo4j_helper}
-  s.licenses = [%q{WTFPL}]
-  s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.9}
-  s.summary = %q{Making neo4j gem mo' spiffy for your data-nomming needs}
+  s.homepage = "http://github.com/pehrlich/neo4j_helper"
+  s.licenses = ["WTFPL"]
+  s.require_paths = ["lib"]
+  s.rubygems_version = "1.8.13"
+  s.summary = "Making neo4j gem mo' spiffy for your data-nomming needs"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3

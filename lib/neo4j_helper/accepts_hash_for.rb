@@ -40,7 +40,8 @@ module Neo4j
                          yield(attributes)
                        else
                          # todo: allow find_or_create
-                         target_class.new attributes
+
+                         ((id = attributes[:id]) && target_class.find(id)) || target_class.new(attributes)
                        end
                      else
                        nil

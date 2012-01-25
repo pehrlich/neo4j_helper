@@ -1,4 +1,4 @@
-# neo4j_helper
+# neo4j_helper Rails
 
 This is an add-on library to https://github.com/andreasronge/neo4j
 

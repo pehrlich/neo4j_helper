@@ -1,21 +1,23 @@
 module Neo4jHelpers
 
-  extend ActiveSupport::Concern
+  module Addons
+    extend ActiveSupport::Concern
 
-  included do
-    alias_method :properties, :attributes
-  end
-
-  module InstanceMethods
-
-  end
-
-  module ClassMethods
-
-    def find_by(options)
-      self.find(options)
+    included do
+      alias_method :properties, :attributes
     end
 
+    module InstanceMethods
+
+    end
+
+    module ClassMethods
+
+      def find_by(options)
+        self.find(options)
+      end
+
+    end
   end
 
 end

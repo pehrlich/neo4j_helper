@@ -10,7 +10,8 @@ module Neo4j
 
         def to_java(value)
           return nil unless value
-          JSON.generate(value).to_s
+          #JSON.generate(value).to_s # pukes on hashie::mash
+          value.to_json
         end
 
         def to_ruby(value)

@@ -13,9 +13,6 @@ module Neo4j
 
         # todo: implement with LuceneQuery class directly?
 
-        # todo: we take an origin node and use origin_node.rels_to(<found node>)
-        # will this get rels in both directions? Should it? Should it be a setting?
-
         def initialize(model, remote_node = nil, dir = :incoming)
           # todo: default dir of both?
           @model = model
@@ -25,7 +22,7 @@ module Neo4j
           @query = {}
           @desc = []
           @asc = []
-          #@origin_node = options[:tuples_from].presence
+
           @origin_node = remote_node
           @dir = dir
         end
@@ -280,7 +277,7 @@ module Neo4j
   module Rails
     Model.class_eval do
       # re-running class eval
-      include Finders # ActiveRecord style find
+      include Finders
     end
   end
 end

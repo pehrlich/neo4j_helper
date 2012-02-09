@@ -7,16 +7,27 @@ module Neo4j
         # multiple where's ok
         # multiple fulltext's not ok
 
+        # note:
+        # id is not indexed in lucene by default, a native finder is used there
+        # we cannot used id:* to get all nodes.
+
+        # todo: implement with LuceneQuery class directly?
+
         # todo: we take an origin node and use origin_node.rels_to(<found node>)
         # will this get rels in both directions? Should it? Should it be a setting?
 
-        def initialize(node, options = {})
-          @node = node
+        def initialize(model, remote_node = nil, dir = :incoming)
+          # todo: default dir of both?
+          @model = model
 
-          raise "Invalid node. Must repond to #all" unless node.respond_to? :all
+          raise "Invalid base node/model. Must repond to #all" unless model.respond_to? :all
 
-          @options = options
           @query = {}
+          @desc = []
+          @asc = []
+          #@origin_node = options[:tuples_from].presence
+          @origin_node = remote_node
+          @dir = dir
         end
 
         def limit(limit)
@@ -30,8 +41,31 @@ module Neo4j
           self
         end
 
-        def order(hash)
-          raise 'todo'
+        def order(hash_or_array)
+
+          if hash_or_array.is_a? Hash
+            fields = Array.wrap hash_or_array.keys.first
+            order = hash_or_array.values.first
+          else
+            fields = Array.wrap hash_or_array
+            order = :desc
+          end
+
+          if order == :desc
+            @asc = []
+            @desc.concat fields
+          elsif order == :asc
+            @desc = []
+            @asc.concat fields
+          else
+            raise "required asc/desc, given: #{order}"
+          end
+
+          if @queryText.blank?
+            # set default search
+            @queryText = "#{fields.first}:*"
+          end
+
           self
         end
 
@@ -107,14 +141,19 @@ module Neo4j
           end
 
           p "setting fulltext query: #{query}"
-          @fulltext = query
+          @queryText = query
           @query[:type] = :fulltext
           self
         end
 
-        def where(hash)
-          @query[:fulltext] = nil
-          (@query[:where] ||= {}).merge! hash
+        def where(options)
+          #  @query[:fulltext] = nil
+          #  (@query[:where] ||= {}).merge! hash
+          if options.is_a? String
+            @queryText = options
+          else
+            raise 'non-string #where query not implemented'
+          end
           self
         end
 
@@ -122,28 +161,46 @@ module Neo4j
           # this does the search
           # can we use #all here?
           # todo: we could also memoize here
+          p "@queryText : #{@queryText}"
+          p @query
 
           #Goal.all("name_upcase: #{name.upcase}", :per_page => limit, :page => page, :type => :fulltext)
-          if @query[:type] == :fulltext
-            p "fulltext query: #{@fulltext}"
-            p @query
 
-            # for whatever reasons, @node is our rails model: Goal.all
-            result_nodes = @node.all(@fulltext, @query)
+          result_nodes = @model.all(@queryText, @query)
 
+          if @asc.present?
+            result_nodes.asc(*@asc)
+          end
+
+          if @desc.present?
+            result_nodes.desc(*@desc)
+          end
+
+          if @origin_node.present?
             # origin node, for example: current_user
-            if origin_node = @options[:tuples_from]
-              result_nodes.map { |result_node|
-                # todo: handle both rel directions? For example, the following would not work:
-                #Neo4j::Rails::Relationships::Tuple.new(result_node, origin_node.rels_to(result_node).all)
+            result_nodes.map { |result_node|
+              # there's no easy way to get both here
+              # rels_dsl#to_other -> storage#to_other
+              # no way to set direction in rels dsl, despite storage having #relationships which takes @dir
 
-                Neo4j::Rails::Relationships::Tuple.new(result_node, result_node.rels_to(origin_node).all)
-              }
-            else
-              result_nodes
-            end
+              # tuple currently doesn't support multiple rels anyway
+
+              if @dir == :outgoing
+                Neo4j::Rails::Relationships::Tuple.new(result_node, @origin_node.rels_to(result_node).all)
+              elsif @dir == :incoming
+                Neo4j::Rails::Relationships::Tuple.new(result_node, result_node.rels_to(@origin_node).all)
+              else
+                raise "rel dir #{@dir} not supported :-("
+
+                rels = result_node.rels_to(@origin_node).all
+                rels.concat @origin_node.rels_to(result_node).all
+                Neo4j::Rails::Relationships::Tuple.new(result_node, rels)
+
+              end
+
+            }
           else
-            raise 'non-fulltext queries not yet implemented'
+            result_nodes
           end
         end
 
@@ -183,10 +240,21 @@ module Neo4j
         # unlike the case of Goal.users.tuples, where the goal is constant and the users are changing with every rel,
         # here the current_user is constant and the goal is changing with every rel
 
-        def tuples(origin_node)
-          # node: other name, such as tuples_from or tuples_of could be considered
-          # but they might imply only results w/ rels, which is not necessarily the case.
-          QueryBuilder.new(self, {:tuples_from => origin_node})
+        def tuples(options)
+          # todo: default dir of both
+          # todo: updated tuples method in other dsl w/ to and from
+
+          if node = options[:to]
+            QueryBuilder.new(self, node, :outgoing)
+          elsif node = options[:from]
+            QueryBuilder.new(self, node, :incoming)
+          elsif  node = options[:both] ||  node = options[:about]
+            # note: not implemented in qb
+            QueryBuilder.new(self, node, :both)
+          else
+            QueryBuilder.new(self)
+          end
+
         end
 
         def builder_find

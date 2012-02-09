@@ -54,32 +54,7 @@ For example:
         :rel_status => 'hidden' # argyle is hidden for this user
     }
 
-The second goal is to allow easy manipulation and understanding of multiple relationships between two nodes.
-
-For example, keeping many relationships as node history:
-
-    mega_rel = MyRelHistory.new(user_rels)
-    Tuple.new(some_location, mega_rel).to_json
-    => {
-        :id => '1', # this is the location node id
-        :name => 'Argyle, NY',
-        :rel_average_time_active => '11 days'
-    }
-
-In this case, `rel_average_time_active` is produced by the MyRelHistory class.  A default mega rel is provided,
-which wraps a sole relationship:
-
-    class MegaRel
-      def initialize(rels)
-        @rels = rels
-      end
-
-      attr_accessor :rels
-
-      def method_missing(symbol, *args)
-        @rels.first.send(symbol, args)
-      end
-    end
+Todo: The second goal is to allow easy manipulation and understanding of multiple relationships between two nodes.
 
 
 Tuples can be used as such:
@@ -89,6 +64,17 @@ Tuples can be used as such:
 
     # update the tuple to the node w/ the given id
     User.first.goals.update_tuple_attributes(params[:goal])
+
+
+### Query Builder
+
+this comes with a new experimental query builder, for example:
+
+    Post.tuples(:from => current_user).order(:updated_at).limit(3).all
+
+    Post.tuples(:to => current_user).fulltext(:name => {:all => name.split}).limit(limit).page(page)
+
+
 
 ### Misc
 

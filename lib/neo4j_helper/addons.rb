@@ -30,21 +30,23 @@ module Neo4jHelpers
         if options.is_a? Array
           field = :id
           values = options
-        else
+        elsif options.is_a? Hash
           field = options.keys.first
           values = options.values.first
+        else
+          field = :id
+          values = [options]
         end
 
 
         return nil unless field.present? && values.present?
 
         #p "any in #{field} #{values}"
-        values.map do |value|
+        results = values.map do |value|
           #p "finding #{field} #{value} - #{field.class} #{value.class}"
-          g = self.find(field => value)
-          p g
-          g
+          self.find(field => value)
         end
+        results.compact
 
         #query = self.find(field => values.shift)
         #

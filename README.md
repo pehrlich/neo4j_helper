@@ -8,7 +8,11 @@ attempt to bring rails neo4j to the same accomplishment.
 Read the source, its educational.
 
 
+    # This gem is alpha.  The following doesn't work yet:
+    # for now, run a git pull and install in vendor/gems
     gem install neo4j_helper
+
+
 
 
 ## Usage
@@ -47,12 +51,12 @@ The goal of the tuple is to allow extremely simple to/from json with rel data an
 
 For example:
 
-    Tuple.new(some_location, user_rels).to_json
-    => {
-        :id => '1', # this is the location node id
-        :name => 'Argyle, NY',
-        :rel_status => 'hidden' # argyle is hidden for this user
-    }
+    t = Tuple.new(some_location, current_user.rels_to(some_location))
+    t.rels # the rels outgoing from user
+    t.end_node # the user
+
+
+Note: Currently this relies on acts_as_api, that code should be extracted to an addon to the acts_as_api_gme
 
 Todo: The second goal is to allow easy manipulation and understanding of multiple relationships between two nodes.
 

@@ -22,5 +22,6 @@ module Neo4j
 
     end
     converters = nil # reload converters
+
   end
 end

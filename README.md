@@ -79,6 +79,11 @@ this comes with a new experimental query builder, for example:
     Post.tuples(:to => current_user).fulltext(:name => {:all => name.split}).limit(limit).page(page)
 
 
+### Syntactical sugar
+ - lots of undocumented things (todo: document)
+ - allow #new as well as #build when setting up relationships
+
+
 
 ### Misc
 
@@ -87,13 +92,25 @@ this comes with a new experimental query builder, for example:
 
 TODO: niceties to try and bring the syntax as close as possible to mongoid;
 
- - .limit(), .page(), and .sort(),
+ - figure out if both fulltext and exact indices can be made on a single field
+ - allow .as when setting up has_n and has_one
  - allowing the :unique flag to be passed to indexes (like mongoid),
  - making the difference between the Lucene query and neo4j traversal more evident, useful, or hidden
- - looking for some syntactic sugar so that its not necessary to do a wildcard query returning a lucene search in order to run a sort.
  - command to automatically add missing indexes
  - make it so that when invalid parameters get passed to rels, it pukes, rather than returning a Class
  - make Class objects more debuggable
+
+
+ nodes and rels are held cached before persistence:
+
+  - can we do anything to make this more evident?
+  - i.e., inspection either saying post #, or post # cached rel
+
+  => #<Post:0x128d1417 @_relationships={:"Post#posts"=>#<Neo4j::Rails::Relationships::Storage:0x1adb8a22 @rel_class=Neo4j::Rails::Relationship, @target_class=Neo4j::Rails::Model, @incoming_rels=[#<Neo4j::Rails::Relationship:0x21ed22af @start_node=Goal 5, @properties={}, @end_node=#<Post:0x128d1417 ...>, @properties_before_type_cast={}, @type="Post#posts">], @node=#<Post:0x128d1417 ...>, @rel_type=:"Post#posts", @persisted_related_nodes={}, @outgoing_rels=[], @persisted_relationships={}, @persisted_node_to_relationships={}>, :"User#notified_users"=>#<Neo4j::Rails::Relationships::Storage:0x57d437c @rel_class=Notification, @target_class=User, @incoming_rels=[], @node=#<Post:0x128d1417 ...>, @rel_type=:"User#notified_users", @persisted_related_nodes={}, @outgoing_rels=[Notification ], @persisted_relationships={}, @persisted_node_to_relationships={}>}, @changed_attributes={"body"=>nil}, @properties={"body"=>"123"}, @properties_before_type_cast={:body=>"123"}>
+ jruby-1.6.6 :021 > p.save
+  => true
+ jruby-1.6.6 :022 > u.notifications.first
+  => #<Post:0x26cffd3e @_relationships={}, @_java_node=#<#<Class:0x63a80928>:0x592d9d9a>, @properties={}, @properties_before_type_cast={}>
 
 
 #### todo: Allow cool rel queries:
@@ -112,10 +129,9 @@ TODO: niceties to try and bring the syntax as close as possible to mongoid;
 Once you've made your great commits
 
 1. Fork
-1. Pull # > git clone git://whatever
-1. Push # > git push
-1. Pull request # github's GUI
-1. \# That's it!
+1. Pull
+1. Push
+1. Pull request
 
 
 

@@ -82,6 +82,7 @@ this comes with a new experimental query builder, for example:
 ### Syntactical sugar
  - lots of undocumented things (todo: document)
  - allow #new as well as #build when setting up relationships
+ - created the model method: write_attr_in_transaction, which saves you from needing a blocks.
 
 
 

@@ -1,3 +1,4 @@
+require 'neo4j_helper/attributes'
 require 'neo4j_helper/accepts_hash_for'
 require 'neo4j_helper/addons'
 require 'neo4j_helper/finders'

@@ -42,11 +42,13 @@ module Neo4j
 
         attr_accessor :end_node, :rels
 
-        def as_api_response(api_template)
+        def as_api_response(api_template, context = nil)
+          # todo: use context as a way to replace rels
 
           node_hash, rels_hash = [@end_node, @rels].map do |item|
             item.respond_to?(:as_api_response) ? item.as_api_response(api_template) : item
           end
+
 
           # for now, limited to one rel
           node_hash[:rel] = rels_hash.first

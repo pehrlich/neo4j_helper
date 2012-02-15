@@ -20,6 +20,20 @@ Read the source, its educational.
 Methods are automatically added to Neo4j::Rails::Model.  This means once you install the gem, you can't get away from them.  If this causes issues, let me know, and maybe we can implement a mixin instead.
 
 
+### Actually good inspectors:
+
+Before:
+
+    jruby-1.6.6 :003 > p.rels.map {|r| r.inspect }
+    => ["#<Neo4j::Rails::Relationship:0x207bfdc3 @start_node=nil, @type=\"\", @properties_before_type_cast={}, @end_node=nil, @properties={}, @_java_rel=#<#<Class:0x23205829>:0x37608a6e>>", "#<Neo4j::Rails::Relationship:0x7689b9bf @start_node=nil, @type=\"\", @properties_before_type_cast={}, @end_node=nil, @properties={}, @_java_rel=#<#<Class:0x23205829>:0x17ff08d>>", "#<#<Class:0x23205829>:0x10febedf>"]
+
+
+After:
+
+    => ["Post#worse_post: Post 18 --> Post 19", "Post#worse_post: Post 18 --> Post 19", "#<#<Class:0x8ac3714>:0x7a0008e5>"]
+
+
+
 ### Automatic JSON serialization
 
     # user.rb
@@ -93,6 +107,7 @@ this comes with a new experimental query builder, for example:
 
 TODO: niceties to try and bring the syntax as close as possible to mongoid;
 
+ - alias has_many for has_n
  - figure out if both fulltext and exact indices can be made on a single field
  - allow .as when setting up has_n and has_one
  - allowing the :unique flag to be passed to indexes (like mongoid),

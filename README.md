@@ -97,7 +97,7 @@ this comes with a new experimental query builder, for example:
  - lots of undocumented things (todo: document)
  - allow #new as well as #build when setting up relationships
  - created the model method: write_attr_in_transaction, which saves you from needing a blocks.
-
+ - aliases has_many for has_n
 
 
 ### Misc
@@ -107,7 +107,7 @@ this comes with a new experimental query builder, for example:
 
 TODO: niceties to try and bring the syntax as close as possible to mongoid;
 
- - alias has_many for has_n
+
  - figure out if both fulltext and exact indices can be made on a single field
  - allow .as when setting up has_n and has_one
  - allowing the :unique flag to be passed to indexes (like mongoid),

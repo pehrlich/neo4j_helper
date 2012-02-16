@@ -75,7 +75,7 @@ module Neo4j
 
           # todo: admire mongoid docs and improve/expand this method
 
-          # todo: escape and test: + - && || ! ( ) { } [ ] ^ " ~ * ? : \
+
 
           # todo: searching multiple fields
 
@@ -90,12 +90,13 @@ module Neo4j
             value = arg.values.first
 
             joiner = " OR "
-            partial_words = true
-            fuzzy = true
+            partial_words = false
+            fuzzy = false
 
             if value.is_a? String
               #:name => 'a b c'
               terms = value.split
+              joiner = ' '
             end
 
             if value.is_a? Array
@@ -130,9 +131,13 @@ module Neo4j
 
             # both word*~ and word~* are fine
 
+            # escape: + - && || ! ( ) { } [ ] ^ " ~ * ? : \
+            # todo: && || \
+            terms.map { |t| t.gsub!(/["\+\-\(\)\{\}\[\]\^\~\*\:\!]/, '') }
+
             terms.map! { |t| '*' << t << '*' } if partial_words
 
-            terms.map! { |t| t << '~' } if fuzzy
+            terms.map { |t| t << '~' } if fuzzy
 
             query = "#{field}:(#{terms.join joiner})"
           end
@@ -237,7 +242,7 @@ module Neo4j
         # unlike the case of Goal.users.tuples, where the goal is constant and the users are changing with every rel,
         # here the current_user is constant and the goal is changing with every rel
 
-        def tuples(options)
+        def tuples(options = {})
           # todo: default dir of both
           # todo: updated tuples method in other dsl w/ to and from
 
@@ -254,7 +259,7 @@ module Neo4j
 
         end
 
-        def builder_find
+        def finder
           QueryBuilder.new(self)
         end
 

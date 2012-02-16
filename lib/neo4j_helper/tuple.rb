@@ -46,7 +46,7 @@ module Neo4j
           # todo: use context as a way to replace rels
 
           node_hash, rels_hash = [@end_node, @rels].map do |item|
-            item.respond_to?(:as_api_response) ? item.as_api_response(api_template) : item
+            item.respond_to?(:as_api_response) ? item.as_api_response(api_template, context) : item
           end
 
 

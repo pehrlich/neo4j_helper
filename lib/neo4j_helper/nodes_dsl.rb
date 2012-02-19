@@ -40,6 +40,7 @@ module Neo4j
           rel
         end
 
+        # todo: move to somewhere the rails model can use it as well?
         def ensure_relation(remote_node, attributes = nil)
           if rel = @storage.to_other(remote_node).first
             rel.attributes= attributes if attributes

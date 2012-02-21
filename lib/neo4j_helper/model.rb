@@ -2,26 +2,6 @@ module Neo4j
   module Rails
     class Model
 
-      def self.update!(attributes)
-        id = attributes[:id]
-        raise "No id given" unless id.present?
-
-        resource = self.find(id)
-        raise "Resource not found given id:`#{id}'" unless resource
-
-        resource.update_attributes!(attributes)
-      end
-
-      def self.update(attributes)
-        id = attributes[:id]
-        raise "No id given" unless id.present?
-
-        resource = self.find(id)
-        return false unless resource
-
-        resource.update_attributes(attributes)
-      end
-
       def ensure_relation(type, options = {}, props = {})
         # options: to and from
         if end_node = options[:to]
@@ -69,6 +49,38 @@ module Neo4j
       def rel_to(node)
         rels_to(node).first
       end
+
+
+      class << self
+
+        delegate :any_in, :all_in, :where, :find_by, to: :query_builder
+
+        def query_builder
+          Neo4j::Rails::Finders::QueryBuilder.new(self)
+        end
+
+        def update!(attributes)
+          id = attributes[:id]
+          raise "No id given" unless id.present?
+
+          resource = self.find(id)
+          raise "Resource not found given id:`#{id}'" unless resource
+
+          resource.update_attributes!(attributes)
+        end
+
+        def update(attributes)
+          id = attributes[:id]
+          raise "No id given" unless id.present?
+
+          resource = self.find(id)
+          return false unless resource
+
+          resource.update_attributes(attributes)
+        end
+
+      end
+
 
     end
   end

@@ -86,6 +86,12 @@ Tuples can be used as such:
 
 ### Query Builder
 
+Beinning to implement mongoid query syntax
+
+ - any_in, also_in, are done
+ - where has been started
+ - fulltext takes options too
+
 this comes with a new experimental query builder, for example:
 
     Post.tuples(:from => current_user).order(:updated_at).limit(3).all

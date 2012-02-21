@@ -19,45 +19,6 @@ module Neo4jHelpers
         property
       end
 
-      def find_by(options)
-        self.find(options)
-      end
-
-      def any_in(options)
-        #Vehicle.find(:wheels => 2).or(:wheels => 4).not(:name => 'old bike')
-        # if you pass a symbol to find, it gives back goal 47
-
-        if options.is_a? Array
-          field = :id
-          values = options
-        elsif options.is_a? Hash
-          field = options.keys.first
-          values = options.values.first
-        else
-          field = :id
-          values = [options]
-        end
-
-
-        return nil unless field.present? && values.present?
-
-        #p "any in #{field} #{values}"
-        results = values.map do |value|
-          #p "finding #{field} #{value} - #{field.class} #{value.class}"
-          self.find(field => value)
-        end
-        results.compact
-
-        #query = self.find(field => values.shift)
-        #
-        #values.each do |value|
-        #  logger.warn "adding to query: or #{value}"
-        #  query.or(field => value)
-        #end
-        #
-        #query
-      end
-
     end
   end
 

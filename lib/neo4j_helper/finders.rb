@@ -13,11 +13,11 @@ module Neo4j
 
         # todo: implement with LuceneQuery class directly?
 
-        def initialize(model, remote_node = nil, dir = :incoming)
+        def initialize(node, remote_node = nil, dir = :incoming)
           # todo: default dir of both?
-          @model = model
+          @node = node
 
-          raise "Invalid base node/model. Must repond to #all" unless model.respond_to? :all
+          raise "Invalid base node/model. Must repond to #all" unless node.respond_to? :all
 
           @query = {}
           @desc = []
@@ -74,7 +74,6 @@ module Neo4j
           # => ["new name", "name"]
 
           # todo: admire mongoid docs and improve/expand this method
-
 
 
           # todo: searching multiple fields
@@ -154,9 +153,53 @@ module Neo4j
           if options.is_a? String
             @queryText = options
           else
+
             raise 'non-string #where query not implemented'
           end
           self
+        end
+
+        # Match all people with either Bond or 007 as aliases.
+        def any_in(options)
+          @queryText = ''
+          return also_in(options)
+        end
+
+        def also_in(options)
+          if options.is_a? Fixnum
+            options = Array.wrap Fixnum
+          end
+          if options.is_a? Array
+            options = {id: options}
+          end
+          options.each do |prop, terms|
+            # currently, id is different, being outside of a lucene index, but still searchable.
+            # the way this is handled here is pretty dumb-- the return value is quite different from usual
+            return find_by_ids(terms) if prop == :id
+
+            (@queryText ||= '') << Array.wrap(terms).map do |term|
+              "#{prop}:(#{term})"
+            end.join(' OR ')
+
+          end
+          self
+        end
+
+        def find_by_ids(ids)
+
+          results = Array.wrap(ids).map do |id|
+            @node.find(id: id)
+          end
+
+          results.compact
+            #query = self.find(field => values.shift)
+      #  #
+      #  #values.each do |value|
+      #  #  logger.warn "adding to query: or #{value}"
+      #  #  query.or(field => value)
+      #  #end
+      #  #
+      #  #query
         end
 
         def to_enum
@@ -168,7 +211,9 @@ module Neo4j
 
           #Goal.all("name_upcase: #{name.upcase}", :per_page => limit, :page => page, :type => :fulltext)
 
-          result_nodes = @model.all(@queryText, @query)
+          raise 'No query given' unless @queryText.present?
+
+          result_nodes = @node.all(@queryText, @query)
 
           if @asc.present?
             result_nodes.asc(*@asc)
@@ -206,6 +251,7 @@ module Neo4j
           end
         end
 
+        # todo: remove?
         def find(id)
           self.where({:id => id})
           self.first
@@ -250,7 +296,7 @@ module Neo4j
             QueryBuilder.new(self, node, :outgoing)
           elsif node = options[:from]
             QueryBuilder.new(self, node, :incoming)
-          elsif  node = options[:both] ||  node = options[:about]
+          elsif  node = options[:both] || node = options[:about]
             # note: not implemented in qb
             QueryBuilder.new(self, node, :both)
           else

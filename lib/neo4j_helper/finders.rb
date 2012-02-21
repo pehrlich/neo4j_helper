@@ -258,8 +258,10 @@ module Neo4j
         end
 
         def find_by(hash)
-          self.where(hash)
-          self.first
+          #self.where(hash)
+          #self.first
+          # supports  User.find_by(:email => email) :
+          @node.find(hash)
         end
 
         def all

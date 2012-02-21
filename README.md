@@ -113,7 +113,7 @@ this comes with a new experimental query builder, for example:
 
 TODO: niceties to try and bring the syntax as close as possible to mongoid;
 
-
+ - allow :string to be passed as well as :string, or error
  - figure out if both fulltext and exact indices can be made on a single field
  - allow .as when setting up has_n and has_one
  - allowing the :unique flag to be passed to indexes (like mongoid),

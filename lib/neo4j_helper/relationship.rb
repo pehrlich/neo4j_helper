@@ -5,7 +5,7 @@ module Neo4j
 
       def inspect
         # todo: colors
-        "(#{start_node.inspect})-[:#{rel_type.to_s}]->(#{end_node.inspect})"
+        "Rel #{self.neo_id} (#{start_node.inspect})-[:#{rel_type.to_s}]->(#{end_node.inspect})"
       end
 
       # todo: why is it that when I run this manually, I get the proper output?

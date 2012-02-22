@@ -1,5 +1,7 @@
 module Neo4j
-  
+
+  # one option would be to make methods for every hash item here (method_missing)
+  # allowing     results.map &:post # convert to post array
   def self.cypher(string = nil, options = {})
     cypher = Neo4j::Cypher.new(string, options)
     # call results immediately if string given

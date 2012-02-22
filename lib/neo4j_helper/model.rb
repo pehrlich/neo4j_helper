@@ -5,7 +5,7 @@ module Neo4j
       # Channel.rels2(to: location)
       # Channel.rels2(:located, to: location)
 
-      def rels2(type, options = nil)
+      def rels2(type, options = {})
         # type is optinal parameter
         if type.is_a? Hash
           options = type
@@ -27,6 +27,7 @@ module Neo4j
       def ensure_relation(type, options = {}, props = {})
         # options: to and from
         if (rels = rels2(type, options)).present?
+          # if found, update attributes
           rel = rels.first
           #rel.attributes = props
           rel.update_attributes props

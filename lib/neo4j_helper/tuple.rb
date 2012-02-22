@@ -11,8 +11,8 @@ module Neo4j
         #extend ActsAsApi::Base
         #acts_as_api
 
-        #def initialize(end_node, rels_or_mega_rel)
-        def initialize(end_node, rels)
+        #def initialize(node, rels_or_mega_rel)
+        def initialize(node, rels)
           #def initialize(origin_node, remote_node, decl_rel = nil) # todo: accept rel class
           # alternate input: attributes, mega_rel
 
@@ -22,8 +22,8 @@ module Neo4j
 
           #raise 'Unimplemented: specified decl_rel' unless decl_rel == nil
 
-          @end_node = end_node
-          @rels = rels
+          @node = node
+          @rels = Array.wrap rels
 
 
           #@origin_node = origin_node
@@ -40,13 +40,14 @@ module Neo4j
           self
         end
 
-        attr_accessor :end_node, :rels
+        attr_accessor :node, :rels
 
         def as_api_response(api_template, context = nil)
           # todo: use context as a way to replace rels
 
-          node_hash, rels_hash = [@end_node, @rels].map do |item|
+          node_hash, rels_hash = [@node, @rels].map do |item|
             item.respond_to?(:as_api_response) ? item.as_api_response(api_template, context) : item
+            #item.try(:as_api_response, api_template, context) || item # only works if item nil, not if it doesn't respond
           end
 
 
@@ -55,12 +56,17 @@ module Neo4j
           node_hash
         end
 
+        # act as the node
+        def method_missing(symbol, *args)
+          @node.send(symbol, args)
+        end
+
         def to_json
           #{
           #    :rels => rels
           #}
-          [@end_node, @rels]
-          #@end_node
+          [@node, @rels]
+          #@node
         end
 
 

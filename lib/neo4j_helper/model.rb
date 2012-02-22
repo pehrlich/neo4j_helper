@@ -2,15 +2,31 @@ module Neo4j
   module Rails
     class Model
 
-      def ensure_relation(type, options = {}, props = {})
-        # options: to and from
-        if end_node = options[:to]
-          rels = rels_to(end_node, type: type)
-        elsif start_node = options[:from]
-          rels = rels_from(start_node, type: type)
+      # Channel.rels2(to: location)
+      # Channel.rels2(:located, to: location)
+
+      def rels2(type, options = nil)
+        # type is optinal parameter
+        if type.is_a? Hash
+          options = type
+          type = nil
         end
 
-        if rels.present?
+        # todo: allow both directions?
+        if end_node = options[:to]
+          rels = type ? self.rels(type) : self.rels
+          rels.to_other(end_node)
+        elsif start_node = options[:from]
+          rels = type ? start_node.rels(type) : start_node.rels
+          rels.to_other(self)
+        else
+          self.rels(type)
+        end
+      end
+
+      def ensure_relation(type, options = {}, props = {})
+        # options: to and from
+        if (rels = rels2(type, options)).present?
           rel = rels.first
           #rel.attributes = props
           rel.update_attributes props
@@ -19,6 +35,17 @@ module Neo4j
           relate(type, options, props)
         end
 
+      end
+
+      def unrelate(type, options = {})
+        if rels = rels2(type, options)
+          # todo/neo4j: rels.delete_all
+          # rels2 either returns a <Neo4j::Rails::Relationships::AllRelsDsl
+          # or a <Neo4j::Rels::Traverser
+          # the former responds to delete_all, the latter does not
+          #rels.delete_all
+          rels.each &:delete
+        end
       end
 
 
@@ -33,7 +60,7 @@ module Neo4j
         Neo4j::Rails::Relationship.create(type, start_node, end_node, props)
       end
 
-
+      # todo: deprecate in favor of rels2
       def rels_to(end_node, options = {})
         if type = options[:type]
           rels(type).to_other(end_node)

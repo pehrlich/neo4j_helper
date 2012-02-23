@@ -104,6 +104,7 @@ this comes with a new experimental query builder, for example:
  - allow #new as well as #build when setting up relationships
  - created the model method: write_attr_in_transaction, which saves you from needing a blocks.
  - aliases has_many for has_n
+ - symbolize keys by default in #props and #attributes
 
 
 ### Misc

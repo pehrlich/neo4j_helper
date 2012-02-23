@@ -5,7 +5,12 @@ module Neo4j
 
       def inspect
         # todo: colors
+        #NoMethodError: undefined method `neo_id' for nil:NilClass
+        #from /Users/peter/Rails/zendestiny/vendor/gems/neo4j_helper/lib/neo4j_helper/relationship.rb:8:in `inspect'
         "Rel #{self.neo_id} (#{start_node.inspect})-[:#{rel_type.to_s}]->(#{end_node.inspect})"
+        # this doesn't make any sense? How can rel be nil AND a Relationship?
+        # but this doesn't fix it:
+        #"Rel #{self.try(:neo_id)} (#{start_node.inspect})-[:#{rel_type.to_s}]->(#{end_node.inspect})"
       end
 
       # todo: why is it that when I run this manually, I get the proper output?

@@ -58,6 +58,23 @@ In fact, the above is done automatically with no block, so this is just the same
     has_one(:location).to(Location)
     accepts_hash_for :location
 
+
+### Relationship tools
+
+  Model.rels_to(other_node)
+  - shorthand for Model.rels.to_other
+
+  Model.rels2(:rel_type, options = nil)
+  - new version of #rels, allowing options such as to: and from: (see below)
+
+  Model.ensure_relation
+  - will make create a rel and set attribtues if no rel exists
+  - will update specified attributes on a rel if one is found
+
+  Model.insert_relation(:rel_type, to: new_node)
+  - Given a single directional linked list of nodes, this will add a node
+
+
 ### Tuples
 
 Tuples are a useful tool for packaging the relationships going to a node with the node itself.

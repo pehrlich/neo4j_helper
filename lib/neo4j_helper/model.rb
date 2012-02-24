@@ -38,6 +38,39 @@ module Neo4j
 
       end
 
+      # when given a chain of relations (such as a list of posts)
+      # this takes
+      # insert_relation(:newest_posts, to: new_post_node)
+      # which will put new_post node at the top of the chain
+      # currently only to: is accepted, meaning outgoing relationships from self
+      # outgoing rels on the receiver and the to: node should be of the same type
+      def insert_relation(rel_type, options)
+        unless new_item = options[:to]
+          raise "no :to parameter passed"
+        end
+
+        unless new_item.persisted?
+          raise "cannot insert relation to unpersisted node: #{new_item}"
+          # else
+          # RuntimeError (node.rels(...).to_other() not allowed on a node that is not persisted):
+          # when running ensure_relation
+        end
+
+        # fix up the old rel.  Start_node will no longer be me.
+
+        if old_rel = self.rels2(rel_type).first
+          # neo4jrb does not allow us to change the start node on a persisted relationship
+          # instead, it fails silently
+          #rel.start_node = new_item # assumed in the :to direction
+
+          new_item.ensure_relation(rel_type, to: old_rel.end_node)
+
+          old_rel.delete
+        end
+
+        self.ensure_relation(rel_type, options)
+      end
+
       def unrelate(type, options = {})
         if rels = rels2(type, options)
           # todo/neo4j: rels.delete_all

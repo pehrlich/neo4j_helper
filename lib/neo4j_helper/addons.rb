@@ -7,10 +7,6 @@ module Neo4jHelpers
       alias_method :properties, :attributes
     end
 
-    module InstanceMethods
-
-    end
-
     module ClassMethods
 
       # alias_method :prop, :property

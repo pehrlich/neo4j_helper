@@ -313,15 +313,6 @@ module Neo4j
 
       end
 
-      # broken
-      #module InstanceMethods
-      #
-      #  def rels_to(node)
-      #    self.rels.to_other(node)
-      #  end
-      #
-      #end
-
     end
   end
 end

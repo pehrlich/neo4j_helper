@@ -38,6 +38,10 @@ module Neo4j
           self
         end
 
+        # for example
+        # order(created_at: :desc)
+        # this can be used with no other query, and it will find all
+        # Signup.finder.order(created_at: :desc).all
         def order(hash_or_array)
 
           if hash_or_array.is_a? Hash

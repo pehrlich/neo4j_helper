@@ -24,9 +24,14 @@ module Neo4j
         end
       end
 
+      # returns the relation if related, else false
+      def related?(type, options)
+        rels2(type, options).presence
+      end
+
       def ensure_relation(type, options = {}, props = {})
         # options: to and from
-        if (rels = rels2(type, options)).present?
+        if related?(type, options)
           # if found, update attributes
           rel = rels.first
           #rel.attributes = props
@@ -82,7 +87,10 @@ module Neo4j
         end
       end
 
-
+      # creates a relationship between two nodes
+      # accepts :rel_class when making the relationship
+      # currently doesn't read declared relationships to find rel class
+      # to do so, it would have to look them up by rel type and then find the rel class
       def relate(type, options = {}, props = {})
         if end_node = options[:to]
           start_node = self
@@ -91,7 +99,8 @@ module Neo4j
         else
           raise ':to or :from is required'
         end
-        Neo4j::Rails::Relationship.create(type, start_node, end_node, props)
+        klass = options[:rel_class] || Neo4j::Rails::Relationship
+        klass.create(type, start_node, end_node, props)
       end
 
       # todo: deprecate in favor of rels2

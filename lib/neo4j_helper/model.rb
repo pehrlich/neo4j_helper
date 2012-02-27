@@ -25,16 +25,13 @@ module Neo4j
       end
 
       # returns the relation if related, else false
-      def related?(type, options)
-        rels2(type, options).presence
+      def related?(type, options = {})
+        rels2(type, options).first.presence
       end
 
       def ensure_relation(type, options = {}, props = {})
         # options: to and from
-        if related?(type, options)
-          # if found, update attributes
-          rel = rels.first
-          #rel.attributes = props
+        if rel = related?(type, options)
           rel.update_attributes props
           rel
         else

@@ -70,7 +70,8 @@ module Neo4j
           self
         end
 
-        def fulltext(arg)
+        # acceps
+        def fulltext(arg, options = {fuzzy: false, partial_words: false})
           # we can do a bit of lucene query building here
           # to learn more: http://lucene.apache.org/java/3_0_0/queryparsersyntax.html
 
@@ -83,6 +84,7 @@ module Neo4j
           # todo: searching multiple fields
 
 
+
           if arg.is_a? String
             # name: *bob*~
             query = hash
@@ -93,8 +95,6 @@ module Neo4j
             value = arg.values.first
 
             joiner = " OR "
-            partial_words = false
-            fuzzy = false
 
             if value.is_a? String
               #:name => 'a b c'
@@ -110,19 +110,20 @@ module Neo4j
 
             if value.is_a? Hash
               #:name => {:any => ['a', 'b', 'c']}
+              #:name => {:fuzzy => true, :any => ['a', 'b', 'c']}
 
               value.keys.each do |key|
                 case key
                   when :any
                     joiner = " OR "
-                    terms = value[key]
+                    terms = Array.wrap value[key]
                   when :all
                     joiner = " and "
-                    terms = value[key]
+                    terms = Array.wrap value[key]
                   when :fuzzy
-                    fuzzy = value[key]
+                    options[:fuzzy] = value[key]
                   when :partial_words
-                    partial_words = value[key]
+                    options[:partial_words] = value[key]
                   else
                     raise "unknwon key: #{key}"
                 end
@@ -138,9 +139,9 @@ module Neo4j
             # todo: && || \
             terms.map { |t| t.gsub!(/["\+\-\(\)\{\}\[\]\^\~\*\:\!]/, '') }
 
-            terms.map! { |t| '*' << t << '*' } if partial_words
+            terms.map! { |t| '*' << t << '*' } if options[:partial_words]
 
-            terms.map { |t| t << '~' } if fuzzy
+            terms.map { |t| t << '~' } if options[:fuzzy]
 
             query = "#{field}:(#{terms.join joiner})"
           end

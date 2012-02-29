@@ -74,6 +74,26 @@ In fact, the above is done automatically with no block, so this is just the same
   Model.insert_relation(:rel_type, to: new_node)
   - Given a single directional linked list of nodes, this will add a node
 
+### Cypher
+
+Allows cypher queries without the all tha paperwork:
+
+    # Model#cypher symoblizes keys you
+    results = self.cypher %Q{
+                    START self = node(#{self.neo_id})
+                    MATCH (user)-[:member_of]-(self)
+                    RETURN user
+                  }
+    results.map{|row| row[:user]}
+
+And provides good guesses at simple queries.  Here's the one above, rewritten:
+
+    results = self.cypher.match(%Q{
+                        MATCH (user)-[:member_of]-(self)
+                      }).mapped(:user)
+
+A Cypher has the methods initialize(string), results(), start(string), match(string), returning(string), and mapped(*symbols)
+
 
 ### Tuples
 

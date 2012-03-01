@@ -18,21 +18,25 @@ module Neo4j
           # todo: options such as as: :java or as: :ruby
           @query = query
 
+          # todo: metaprogram this shiznit?
           @start = nil
           @match = nil
           @where = nil
           @limit = nil
           @order = nil
+          @skip = nil
           @returning = nil
         end
 
         def results
           unless @query
+            @start = "self = node(#{@node.neo_id})" unless @start
             @query = "START #{@start} MATCH #{@match} "
             @query << " WHERE #{@where} " if @where
             @query << " RETURN #{@returning} "
-            @order << " ORDER BY #{@order} " if @order
+            @query << " ORDER BY #{@order} " if @order
             @query << " LIMIT #{@limit} " if @limit
+            @query << " SKIP #{@skip} " if @skip
 
 
           end
@@ -77,15 +81,18 @@ module Neo4j
           self
         end
 
+        def skip(string)
+          @skip = string
+          self
+        end
+
         def order(string)
+          p "setting order #{string}"
           @order = string
           self
         end
 
         def mapped(*returnables)
-          unless @start
-            @start = "self = node(#{@node.neo_id})"
-          end
           @returning = returnables.join(', ') #returning is an array of args to be returned
           results.map do |row|
             out = returnables.map { |returnable| row[returnable] }

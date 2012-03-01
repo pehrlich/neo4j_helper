@@ -110,7 +110,7 @@ module Neo4j
         else
           raise ':to or :from is required'
         end
-        klass = options[:rel_class] || Neo4j::Rails::Relationship
+        klass = options[:rel_class] || options[:class] ||  Neo4j::Rails::Relationship
         klass.create(type, start_node, end_node, props)
       end
 

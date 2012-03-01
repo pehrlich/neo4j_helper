@@ -20,11 +20,18 @@ module Neo4j
 
           @start = nil
           @match = nil
+          @where = nil
           @returning = nil
         end
 
         def results
-          @query ||= "START #{@start} MATCH #{@match} RETURN #{@returning}"
+          unless @query
+            @query = "START #{@start} MATCH #{@match} "
+            @query << " WHERE #{@where} " if @where
+            @query << " RETURN #{@returning}"
+
+
+          end
           p "sending cypher query:"
           p @query
           rows = Neo4j.query @query
@@ -53,6 +60,11 @@ module Neo4j
 
         def match(string)
           @match = string
+          self
+        end
+
+        def where(string)
+          @where = string
           self
         end
 

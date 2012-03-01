@@ -20,7 +20,7 @@ Read the source, its educational.
 Methods are automatically added to Neo4j::Rails::Model.  This means once you install the gem, you can't get away from them.  If this causes issues, let me know, and maybe we can implement a mixin instead.
 
 
-### Actually good inspectors:
+### New inspectors:
 
 Before:
 
@@ -92,7 +92,7 @@ And provides good guesses at simple queries.  Here's the one above, rewritten:
                         MATCH (user)-[:member_of]-(self)
                       }).mapped(:user)
 
-A Cypher has the methods initialize(string), results(), start(string), match(string), returning(string), and mapped(*symbols)
+A Cypher has the methods initialize(string), results(), start(string), match(string), where(string), returning(string), and mapped(*symbols)
 
 
 ### Tuples

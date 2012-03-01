@@ -22,6 +22,7 @@ module Neo4j
           @match = nil
           @where = nil
           @limit = nil
+          @order = nil
           @returning = nil
         end
 
@@ -29,7 +30,8 @@ module Neo4j
           unless @query
             @query = "START #{@start} MATCH #{@match} "
             @query << " WHERE #{@where} " if @where
-            @query << " RETURN #{@returning}"
+            @query << " RETURN #{@returning} "
+            @order << " ORDER BY #{@order} " if @order
             @query << " LIMIT #{@limit} " if @limit
 
 
@@ -72,6 +74,11 @@ module Neo4j
 
         def limit(string)
           @limit = string
+          self
+        end
+
+        def order(string)
+          @order = string
           self
         end
 

@@ -12,13 +12,27 @@ module Neo4j
           type = nil
         end
 
+        rel_type =  type ? ":#{type}" : ''
         # todo: allow both directions?
+
+        cypher = self.cypher
         if end_node = options[:to]
-          rels = type ? self.rels(type) : self.rels
-          rels.to_other(end_node)
+          # todo: by default, to_other returns nodes in both directions, where we would expect it only to do outgoing.
+          # in fact, there appears to be no easy way to specify direction here with neo4jrb, so we use cypher.
+          # should we decide not to wrap nodes for speed?
+          #rels = type ? self.rels(type) : self.rels
+          #rels.to_other(end_node)
+          #cypher.match("(self)-[rel#{rel_type}]->(node(#{end_node.neo_id}))").mapped(:rel)
+          cypher.match("(self)-[rel#{rel_type}]->(end_node)").
+              where("ID(end_node) = #{end_node.neo_id}").
+              mapped(:rel)
         elsif start_node = options[:from]
-          rels = type ? start_node.rels(type) : start_node.rels
-          rels.to_other(self)
+          cypher.match("(self)<-[rel#{rel_type}]-(start_node)").
+                        where("ID(start_node) = #{start_node.neo_id}").
+                        mapped(:rel)
+          #cypher.match("(self)<-[rel#{rel_type}]-(node(#{start_node.neo_id}))").mapped(:rel)
+          #rels = type ? start_node.rels(type) : start_node.rels
+          #rels.to_other(self)
         else
           self.rels(type)
         end

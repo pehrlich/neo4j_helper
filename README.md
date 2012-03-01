@@ -92,7 +92,7 @@ And provides good guesses at simple queries.  Here's the one above, rewritten:
                         MATCH (user)-[:member_of]-(self)
                       }).mapped(:user)
 
-A Cypher has the methods initialize(string), results(), start(string), match(string), where(string), returning(string), and mapped(*symbols)
+A Cypher has the methods initialize(string), results(), start(string), match(string), where(string), returning(string), limit(string), and mapped(*symbols)
 
 
 ### Tuples

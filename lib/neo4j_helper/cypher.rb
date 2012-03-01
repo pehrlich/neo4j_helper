@@ -21,6 +21,7 @@ module Neo4j
           @start = nil
           @match = nil
           @where = nil
+          @limit = nil
           @returning = nil
         end
 
@@ -29,6 +30,7 @@ module Neo4j
             @query = "START #{@start} MATCH #{@match} "
             @query << " WHERE #{@where} " if @where
             @query << " RETURN #{@returning}"
+            @query << " LIMIT #{@limit} " if @limit
 
 
           end
@@ -65,6 +67,11 @@ module Neo4j
 
         def where(string)
           @where = string
+          self
+        end
+
+        def limit(string)
+          @limit = string
           self
         end
 

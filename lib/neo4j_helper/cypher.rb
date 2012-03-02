@@ -29,6 +29,7 @@ module Neo4j
         end
 
         def results
+
           unless @query
             @start = "self = node(#{@node.neo_id})" unless @start
             @query = "START #{@start} MATCH #{@match} "
@@ -37,11 +38,9 @@ module Neo4j
             @query << " ORDER BY #{@order} " if @order
             @query << " LIMIT #{@limit} " if @limit
             @query << " SKIP #{@skip} " if @skip
-
-
           end
-          p "sending cypher query:"
-          p @query
+
+          p "Cyphering: #{@query}"
           rows = Neo4j.query @query
 
           # note: there are many cases where we won't need wrapping, such as for determining rel_type
@@ -58,6 +57,25 @@ module Neo4j
             out
           end
 
+        end
+
+        def paginate(options)
+          @limit = options[:per_page] || 7
+          if options[:skip] # don't set skip if neither of these are specified
+            @skip = options[:skip]
+          elsif options[:page]
+            @skip = options[:page].to_i * @limit.to_i
+          end
+          mapped
+        end
+
+        def mapped(*returnables)
+          #returning is an array of args to be returned
+          returning(*returnables) unless @returning
+          results.map do |row|
+            out = returnables.map { |returnable| row[returnable] }
+            out.length == 1 ? out[0] : out # unrwap if short # todo: better way?
+          end
         end
 
 
@@ -92,21 +110,12 @@ module Neo4j
           self
         end
 
-        def mapped(*returnables)
-          @returning = returnables.join(', ') #returning is an array of args to be returned
-          results.map do |row|
-            out = returnables.map { |returnable| row[returnable] }
-            out.length == 1 ? out[0] : out # unrwap if short # todo: better way?
-          end
+        def returning(*returnables)
+          # todo: if a string is passed, what happens?
+          @returning = returnables.join(', ') if returnables.present?
+          self
         end
 
-        # ret(user: {rel: :rel})
-        # takes a data structure to format the results in to?
-        # ret(Tuple)
-        # calls Tuple.new(*args)
-        #def returning(string)
-        #  @returning = "RETURN #{string}"
-        #end
 
       end
     end

@@ -25,7 +25,7 @@ module Neo4j
           @limit = nil
           @order = nil
           @skip = nil
-          @returning = nil
+          @returnables = nil
         end
 
         def results
@@ -34,7 +34,7 @@ module Neo4j
             @start = "self = node(#{@node.neo_id})" unless @start
             @query = "START #{@start} MATCH #{@match} "
             @query << " WHERE #{@where} " if @where
-            @query << " RETURN #{@returning} "
+            @query << " RETURN #{@returnables.join(', ')} "
             @query << " ORDER BY #{@order} " if @order
             @query << " LIMIT #{@limit} " if @limit
             @query << " SKIP #{@skip} " if @skip
@@ -71,9 +71,9 @@ module Neo4j
 
         def mapped(*returnables)
           #returning is an array of args to be returned
-          returning(*returnables) unless @returning
+          returning(*returnables) unless @returnables
           results.map do |row|
-            out = returnables.map { |returnable| row[returnable] }
+            out = @returnables.map { |returnable| row[returnable] }
             out.length == 1 ? out[0] : out # unrwap if short # todo: better way?
           end
         end
@@ -112,7 +112,7 @@ module Neo4j
 
         def returning(*returnables)
           # todo: if a string is passed, what happens?
-          @returning = returnables.join(', ') if returnables.present?
+          @returnables = returnables if returnables.present?
           self
         end
 

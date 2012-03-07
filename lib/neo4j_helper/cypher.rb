@@ -25,41 +25,55 @@ module Neo4j
           @limit = nil
           @order = nil
           @skip = nil
+          # note that this can be either an array or a string
           @returnables = nil
+          @results = nil
         end
 
         def results
 
-          unless @query
-            @start = "self = node(#{@node.neo_id})" unless @start
-            @query = "START #{@start} MATCH #{@match} "
-            @query << " WHERE #{@where} " if @where
-            @query << " RETURN #{@returnables.join(', ')} "
-            @query << " ORDER BY #{@order} " if @order
-            @query << " LIMIT #{@limit} " if @limit
-            @query << " SKIP #{@skip} " if @skip
-          end
+          unless @results
+            # memoize.  Important b/c method_missing uses this
 
-          p "Cyphering: #{@query}"
-          rows = Neo4j.query @query
-
-          # note: there are many cases where we won't need wrapping, such as for determining rel_type
-          # but for now, this is premature optimization
-
-          # paths cannot be wrapped
-          rows.map do |row|
-            out = {} # move to a real hash!
-            row.each do |key, value|
-              #row.delete(key) # Java::JavaLang::UnsupportedOperationException: remove
-              #key[key.to_sym] Java::JavaLang::UnsupportedOperationException: 	from java.util.AbstractMap.put(AbstractMap.java:186)
-              out[key.to_sym] = value.respond_to?(:wrapper) ? value.wrapper : value
+            unless @query
+              @start = "self = node(#{@node.neo_id})" unless @start
+              @query = "START #{@start} MATCH #{@match} "
+              @query << " WHERE #{@where} " if @where
+              @query << " RETURN #{@returnables.join(', ')} "
+              @query << " ORDER BY #{@order} " if @order
+              @query << " LIMIT #{@limit} " if @limit
+              @query << " SKIP #{@skip} " if @skip
             end
-            out
+
+            # note: there are many cases where we won't need wrapping, such as for determining rel_type
+            # but for now, this is premature optimization
+
+            # paths cannot be wrapped
+            # todo: figure out any practical application of paths
+
+            p "Cyphering: #{@query}"
+            @results = Neo4j.query(@query).map do |row|
+              out = {} # move to a real hash!
+              row.each do |key, value|
+                #row.delete(key) # Java::JavaLang::UnsupportedOperationException: remove
+                #key[key.to_sym] Java::JavaLang::UnsupportedOperationException: 	from java.util.AbstractMap.put(AbstractMap.java:186)
+                out[key.to_sym] = value.respond_to?(:wrapper) ? value.wrapper : value
+              end
+              out
+            end
+
           end
 
+          @results
+        end
+
+        def clear_cache
+          @results = nil
         end
 
         def paginate(options)
+          clear_cache
+
           @limit = options[:per_page] || 7
           if options[:skip] # don't set skip if neither of these are specified
             @skip = options[:skip]
@@ -71,51 +85,78 @@ module Neo4j
 
         def mapped(*returnables)
           #returning is an array of args to be returned
-          returning(*returnables) unless @returnables
+
+          returning(*returnables) if returnables.present?
+
           results.map do |row|
             out = @returnables.map { |returnable| row[returnable] }
-            out.length == 1 ? out[0] : out # unrwap if short # todo: better way?
+            out.length == 1 ? out[0] : out # unrwap array if possible # todo: better way?
           end
         end
 
-
         def start(string)
+          clear_cache
           @start = string
           self
         end
 
         def match(string)
+          clear_cache
           @match = string
           self
         end
 
         def where(string)
+          clear_cache
           @where = string
           self
         end
 
         def limit(string)
+          clear_cache
           @limit = string
           self
         end
 
         def skip(string)
+          clear_cache
           @skip = string
           self
         end
 
         def order(string)
+          clear_cache
           p "setting order #{string}"
           @order = string
           self
         end
 
+        # accepts an array of symbols, or a custom string
+        # .returning(:people, :hobbits)
+        # .returning('people, axes, gnomes')
         def returning(*returnables)
-          # todo: if a string is passed, what happens?
+          clear_cache
           @returnables = returnables if returnables.present?
           self
         end
 
+
+        protected
+
+
+        def method_missing(symbol, *args)
+          # benefits:
+          # - we don't need to know what results are,
+          # - we need to enumerate here the relevent methods
+          # drawbacks:
+          #  - results may be called unintentionally, for example in a typo making a partially constructed query,
+          # leading to very confusing results.
+          if results.respond_to? symbol
+            results.send(symbol, *args)
+          else
+            super
+          end
+        end
 
       end
     end

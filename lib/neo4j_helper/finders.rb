@@ -170,6 +170,10 @@ module Neo4j
           return also_in(options)
         end
 
+        #def any_of(options)
+        #  http://mongoid.org/docs/querying/criteria.html#any_of
+        #end
+
         def also_in(options)
           if options.is_a? Fixnum
             options = Array.wrap Fixnum

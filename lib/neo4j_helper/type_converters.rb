@@ -15,8 +15,16 @@ module Neo4j
         end
 
         def to_ruby(value)
+          # from db, to object
           return nil unless value
-          JSON.parse(value.to_s)
+          results = JSON.parse(value.to_s)
+
+          if results.is_a? Array
+            results.map &:symbolize_keys
+          else
+            results.symbolize_keys
+          end
+
         end
       end
 

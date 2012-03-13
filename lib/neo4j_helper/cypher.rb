@@ -27,6 +27,7 @@ module Neo4j
           @skip = nil
           # note that this can be either an array or a string
           @returnables = nil
+          @formatter = nil
           @results = nil
         end
 
@@ -52,6 +53,8 @@ module Neo4j
             # todo: figure out any practical application of paths
 
             p "Cyphering: #{@query}"
+            # this gives us an array of complex hashes:
+            # [ {condiment: {id: 1, name: 'Ketchup', _classname: "Condiment"}, flavoring: {id: 32, rel_type: :thick_spread} }, ...]
             @results = Neo4j.query(@query).map do |row|
               out = {} # move to a real hash!
               row.each do |key, value|
@@ -60,6 +63,12 @@ module Neo4j
                 out[key.to_sym] = value.respond_to?(:wrapper) ? value.wrapper : value
               end
               out
+            end
+
+            # if we're given a block @formatter, we allow it to reformat these results
+            if @formatter
+              # todo: check if
+              @results = yield(@formatter, @results)
             end
 
           end
@@ -71,10 +80,10 @@ module Neo4j
           @results = nil
         end
 
-        def paginate(options)
+        def paginate(options = {})
           clear_cache
 
-          @limit = options[:per_page] || 7
+          @limit = options[:per_page] || @limit || 7
           if options[:skip] # don't set skip if neither of these are specified
             @skip = options[:skip]
           elsif options[:page]
@@ -85,6 +94,10 @@ module Neo4j
 
         def mapped(*returnables)
           #returning is an array of args to be returned
+          # by default, this flattens that complex hash
+          # [[{id: 1, name: 'Ketchup'}, {id: 32}], [...], ...]
+          # or, if possible
+          # [{id: 1, name: 'Ketchup'}, {id: 7, name: 'Mustard'}, {...}, ...]
 
           returning(*returnables) if returnables.present?
 
@@ -134,9 +147,10 @@ module Neo4j
         # accepts an array of symbols, or a custom string
         # .returning(:people, :hobbits)
         # .returning('people, axes, gnomes')
-        def returning(*returnables)
+        def returning(*returnables, &block)
           clear_cache
           @returnables = returnables if returnables.present?
+          @formatter = block
           self
         end
 

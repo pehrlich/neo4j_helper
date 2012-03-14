@@ -23,6 +23,10 @@ module Neo4j
           #rels = type ? self.rels(type) : self.rels
           #rels.to_other(end_node)
           #cypher.match("(self)-[rel#{rel_type}]->(node(#{end_node.neo_id}))").mapped(:rel)
+          unless end_node.neo_id
+            raise "No id on :to node. Unpersisted? #{end_node.inspect}"
+          end
+
           cypher.match("(self)-[rel#{rel_type}]->(end_node)").
               where("ID(end_node) = #{end_node.neo_id}").
               mapped(:rel)

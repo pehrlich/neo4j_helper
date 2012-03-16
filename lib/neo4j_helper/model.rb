@@ -4,7 +4,7 @@ module Neo4j
 
       # Channel.rels2(to: location)
       # Channel.rels2(:located, to: location)
-
+      # Channel.rels2(to: 24)
       def rels2(type, options = {})
         # type is optinal parameter
         if type.is_a? Hash
@@ -23,33 +23,46 @@ module Neo4j
           #rels = type ? self.rels(type) : self.rels
           #rels.to_other(end_node)
           #cypher.match("(self)-[rel#{rel_type}]->(node(#{end_node.neo_id}))").mapped(:rel)
-          unless end_node.neo_id
+          if end_node.is_a? Fixnum
+            neo_id = end_node
+          elsif !(neo_id = end_node.neo_id)
             raise "No id on :to node. Unpersisted? #{end_node.inspect}"
           end
 
-          cypher.match("(self)-[rel#{rel_type}]->(end_node)").
-              where("ID(end_node) = #{end_node.neo_id}").
+          out = cypher.match("(self)-[rel#{rel_type}]->(end_node)").
+              where("ID(end_node) = #{neo_id}").
               mapped(:rel)
         elsif start_node = options[:from]
-          cypher.match("(self)<-[rel#{rel_type}]-(start_node)").
+          out = cypher.match("(self)<-[rel#{rel_type}]-(start_node)").
                         where("ID(start_node) = #{start_node.neo_id}").
                         mapped(:rel)
           #cypher.match("(self)<-[rel#{rel_type}]-(node(#{start_node.neo_id}))").mapped(:rel)
           #rels = type ? start_node.rels(type) : start_node.rels
           #rels.to_other(self)
         else
-          self.rels(type)
+          out = self.rels(type)
         end
+
+        # note that the relsdsl #rels returns does not have #length, #count must be used
+        # note also that the above is a lie, and this doesn't appear to work as all for relsdsl
+        out = out[0] if out.count == 1
+
+        out
       end
 
       # returns the relation if related, else false
       def related?(type, options = {})
-        rels2(type, options).first.presence
+        rels2(type, options).presence
       end
 
+      # todo: test update attributes change of classname
       def ensure_relation(type, options = {}, props = {})
         # options: to and from
         if rel = related?(type, options)
+          if options[:class]
+            # todo: dry this against internal methods
+            props[:_classname] = options[:class].name.downcase
+          end
           rel.update_attributes props
           rel
         else
@@ -78,7 +91,8 @@ module Neo4j
 
         # fix up the old rel.  Start_node will no longer be me.
 
-        if old_rel = self.rels2(rel_type).first
+        #if old_rel = self.rels2(rel_type)
+        if old_rel = self.rels(rel_type).first
           # neo4jrb does not allow us to change the start node on a persisted relationship
           # instead, it fails silently
           #rel.start_node = new_item # assumed in the :to direction
@@ -98,7 +112,8 @@ module Neo4j
           # or a <Neo4j::Rels::Traverser
           # the former responds to delete_all, the latter does not
           #rels.delete_all
-          rels.each &:delete
+          # rels2 returns either a single object or an array
+          Array.wrap(rels).each &:delete
         end
       end
 
@@ -114,7 +129,7 @@ module Neo4j
         else
           raise ':to or :from is required'
         end
-        klass = options[:rel_class] || options[:class] ||  Neo4j::Rails::Relationship
+        klass = options[:class] ||  Neo4j::Rails::Relationship
         klass.create(type, start_node, end_node, props)
       end
 
@@ -124,6 +139,7 @@ module Neo4j
           rels(type).to_other(end_node)
         else
           self.rels.to_other(end_node)
+          # self.rels2(options[:type], {to: end_node}) ?
         end
       end
 

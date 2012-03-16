@@ -21,7 +21,7 @@ module Neo4j
           # todo: metaprogram this shiznit?
           @start = nil
           @match = nil
-          @where = nil
+          @where = []
           @limit = nil
           @order = nil
           @skip = nil
@@ -39,11 +39,11 @@ module Neo4j
             unless @query
               @start = "self = node(#{@node.neo_id})" unless @start
               @query = "START #{@start} MATCH #{@match} "
-              @query << " WHERE #{@where} " if @where
+              @query << " WHERE #{@where.join ' AND '} " if @where.present?
               @query << " RETURN #{@returnables.join(', ')} "
               @query << " ORDER BY #{@order} " if @order
-              @query << " LIMIT #{@limit} " if @limit
               @query << " SKIP #{@skip} " if @skip
+              @query << " LIMIT #{@limit} " if @limit
             end
 
             # note: there are many cases where we won't need wrapping, such as for determining rel_type
@@ -119,9 +119,10 @@ module Neo4j
           self
         end
 
+        # where can be called multiple time in succession, and all where clauses will be used
         def where(string)
           clear_cache
-          @where = string
+          @where << string
           self
         end
 
@@ -139,7 +140,6 @@ module Neo4j
 
         def order(string)
           clear_cache
-          p "setting order #{string}"
           @order = string
           self
         end

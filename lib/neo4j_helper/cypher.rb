@@ -139,6 +139,13 @@ module Neo4j
           self
         end
 
+        # this allows us to base one query off of another
+        def continue_match(string)
+          clear_cache
+          @match = @match + string
+          self
+        end
+
         # where can be called multiple time in succession, and all where clauses will be used
         def where(string)
           clear_cache

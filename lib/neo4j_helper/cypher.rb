@@ -10,6 +10,10 @@ module Neo4j
         string.present? ? cypher.results : cypher
       end
 
+      def match(str)
+        self.cypher.match(str)
+      end
+
       class Cypher
 
         def initialize(node, query = nil, options={})
@@ -27,7 +31,8 @@ module Neo4j
           @skip = nil
           # note that this can be either an array or a string
           @returnables = nil
-          @formatter = nil
+          @return_as = nil
+          @formatter = nil # todo: deprecate?
           @results = nil
         end
 
@@ -60,7 +65,9 @@ module Neo4j
               row.each do |key, value|
                 #row.delete(key) # Java::JavaLang::UnsupportedOperationException: remove
                 #key[key.to_sym] Java::JavaLang::UnsupportedOperationException: 	from java.util.AbstractMap.put(AbstractMap.java:186)
-                out[key.to_sym] = value.respond_to?(:wrapper) ? value.wrapper : value
+                out[key.to_sym] = (@return_as != :java and value.respond_to?(:wrapper)) ?
+                    value.wrapper :
+                    value
               end
               out
             end
@@ -92,19 +99,32 @@ module Neo4j
           mapped
         end
 
+        #returning is an array of args to be returned
+        # by default, this flattens that complex hash
+        # [[{id: 1, name: 'Ketchup'}, {id: 32}], [...], ...]
+        # or, if possible
+        # [{id: 1, name: 'Ketchup'}, {id: 7, name: 'Mustard'}, {...}, ...]
+        # all options will be forwarded to #returning
         def mapped(*returnables)
-          #returning is an array of args to be returned
-          # by default, this flattens that complex hash
-          # [[{id: 1, name: 'Ketchup'}, {id: 32}], [...], ...]
-          # or, if possible
-          # [{id: 1, name: 'Ketchup'}, {id: 7, name: 'Mustard'}, {...}, ...]
+          # note that compact is used at the end, because a blank query (sometimes?) returns for example {post: nil}
 
           returning(*returnables) if returnables.present?
 
-          results.map do |row|
+          # todo: SUM, COUNT etc
+          # but not TYPE, etc
+          # are downcased when made in to keys.  This is likely a neo4jrb bug, and we could correct for it
+          #@returnables = @returnables.map{ |r| r.to_s.gsub}
+
+          mapped = self.results.map do |row|
             out = @returnables.map { |returnable| row[returnable] }
             out.length == 1 ? out[0] : out # unrwap array if possible # todo: better way?
+          end.compact
+
+          if @return_as.is_a?(Class)
+            mapped = mapped.map { |row| @return_as.new(row) }
           end
+
+          mapped
         end
 
         def start(string)
@@ -145,12 +165,23 @@ module Neo4j
         end
 
         # accepts an array of symbols, or a custom string
-        # .returning(:people, :hobbits)
-        # .returning('people, axes, gnomes')
+        # .returning(:person, :hobbit)
+        # .returning('person, axe, gnome')
+        # accepts the as: parameter, which specifies how the content should be delivered
+        # can be one of :ruby, :java, or a class.  When given a class, that class will
+        # be passed the parameters suffixing a call to #mapped or #paginate (which uses mapped)
+        # .returning(:person, :involvement, {as: Tuple})
+        # by default, objects are returned as their ruby classes. If a as: class is specified, there
+        # is no way to request java objects.
         def returning(*returnables, &block)
           clear_cache
+
+          options = returnables.last.is_a?(Hash) ? returnables.pop : {}
+
           @returnables = returnables if returnables.present?
+          @return_as = options[:as]
           @formatter = block
+
           self
         end
 
@@ -165,7 +196,8 @@ module Neo4j
           # drawbacks:
           #  - results may be called unintentionally, for example in a typo making a partially constructed query,
           # leading to very confusing results.
-          if results.respond_to? symbol
+          # we don't want to calculate results to see if they have the method, and so create a dummy enum
+          if ({}.enum_for).respond_to? symbol
             results.send(symbol, *args)
           else
             super

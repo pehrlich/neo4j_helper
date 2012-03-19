@@ -61,7 +61,7 @@ module Neo4j
         if rel = related?(type, options)
           if options[:class]
             # todo: dry this against internal methods
-            props[:_classname] = options[:class].name.downcase
+            props[:_classname] = options[:class].to_s
           end
           rel.update_attributes props
           rel

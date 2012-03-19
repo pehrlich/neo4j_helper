@@ -38,6 +38,11 @@ module Neo4j
           self
         end
 
+        def paginate(options)
+          page(options[:page])
+          limit(options[:per_page])
+        end
+
         # for example
         # order(created_at: :desc)
         # this can be used with no other query, and it will find all

@@ -42,19 +42,18 @@ module Neo4j
 
         attr_accessor :node, :rels
 
-        def as_api_response(api_template, context = nil)
-          # todo: use context as a way to replace rels
-
-          node_hash, rels_hash = [@node, @rels].map do |item|
-            item.respond_to?(:as_api_response) ? item.as_api_response(api_template, context) : item
-            #item.try(:as_api_response, api_template, context) || item # only works if item nil, not if it doesn't respond
-          end
-
-
-          # for now, limited to one rel
-          node_hash[:rel] = rels_hash.first
-          node_hash
-        end
+        #def as_api_response(api_template, context = nil)
+        #  # todo: use context as a way to replace rels
+        #
+        #  node_hash, rels_hash = [@node, @rels].map do |item|
+        #    item.respond_to?(:as_api_response) ? item.as_api_response(api_template, context) : item
+        #  end
+        #
+        #
+        #  # for now, limited to one rel
+        #  node_hash[:rel] = rels_hash.first
+        #  node_hash
+        #end
 
         # act as the node
         def method_missing(symbol, *args)

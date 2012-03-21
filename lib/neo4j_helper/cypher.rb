@@ -42,7 +42,14 @@ module Neo4j
             # memoize.  Important b/c method_missing uses this
 
             unless @query
-              @start = "self = node(#{@node.neo_id})" unless @start
+              unless @start
+                if id = @node.neo_id
+                  @start = "self = node(#{id})"
+                else
+                  raise "No ID given on #{@node.inspect}.  Unpersisted?"
+                end
+
+              end
               @query = "START #{@start} MATCH #{@match} "
               @query << " WHERE #{@where.join ' AND '} " if @where.present?
               @query << " RETURN #{@returnables.join(', ')} "

@@ -114,6 +114,9 @@ module Neo4j
           #rels.delete_all
           # rels2 returns either a single object or an array
           Array.wrap(rels).each &:delete
+          # note, if nil is not returned here, rels, which doesn't exist, is.  Bugg!
+          # todo.. should be deleted from neo4j identity map?
+          nil
         end
       end
 

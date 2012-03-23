@@ -106,6 +106,7 @@ module Neo4j
           mapped
         end
 
+        # accepts symbols or strings arguments. (auto converted to symbols)
         #returning is an array of args to be returned
         # by default, this flattens that complex hash
         # [[{id: 1, name: 'Ketchup'}, {id: 32}], [...], ...]
@@ -123,7 +124,9 @@ module Neo4j
           #@returnables = @returnables.map{ |r| r.to_s.gsub}
 
           mapped = self.results.map do |row|
-            out = @returnables.map { |returnable| row[returnable] }
+            out = @returnables.map do |returnable|
+              row[returnable.to_sym]
+            end
             out.length == 1 ? out[0] : out # unrwap array if possible # todo: better way?
           end.compact
 

@@ -69,13 +69,23 @@ module Neo4j
             # [ {condiment: {id: 1, name: 'Ketchup', _classname: "Condiment"}, flavoring: {id: 32, rel_type: :thick_spread} }, ...]
             @results = Neo4j.query(@query).map do |row|
               out = {} # move to a real hash!
+
               row.each do |key, value|
                 #row.delete(key) # Java::JavaLang::UnsupportedOperationException: remove
                 #key[key.to_sym] Java::JavaLang::UnsupportedOperationException: 	from java.util.AbstractMap.put(AbstractMap.java:186)
-                out[key.to_sym] = (@return_as != :java and value.respond_to?(:wrapper)) ?
-                    value.wrapper :
-                    value
+                out[key.to_sym] =
+                    if @return_as == :java
+                      value
+                    elsif value.respond_to?(:wrapper)
+                      value.wrapper
+                    elsif value.is_a?(Java::ScalaCollection::JavaConversions::SeqWrapper)
+                      # should add #wrapper method to SeqWrapper instead..?
+                      value.map { |item| item.respond_to?(:wrapper) ? item.wrapper : item }
+                    else
+                      value
+                    end
               end
+
               out
             end
 
@@ -157,9 +167,11 @@ module Neo4j
         end
 
         # where can be called multiple time in succession, and all where clauses will be used
+        # every clause passed in will be wrapped with parenthesis and ANDed to the previous clauses
         def where(string)
           clear_cache
-          @where << string
+          # make clauses individual:
+          @where << "( #{string} )"
           self
         end
 

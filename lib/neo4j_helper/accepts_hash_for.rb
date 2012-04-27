@@ -3,17 +3,18 @@ module Neo4j
     class Model
       class << self
 
-        # This allows anything to be thrown at a relationship and understood.
-        # usage:
+        # Allows custom behavior when a hash is passed in to a relationship setter
+        # Default behavior is retained when a non-hash is given
         #
-        # has_one(:location).to(Location)
+        # has_one(:location)
         # accepts_hash_for :location
         #
         # Will run Location.new with the passed in :location hash.
-        # You can also give it a block which returns a location node:
         #
-        # accepts_hash_for :location do |location_attributes|
-        #   Location.find_or_create_by(:name => location_attributes[:name])
+        # You can also give it a block to return a node:
+        #
+        # accepts_hash_for :location do |properties|
+        #   Location.find_or_create_by(name: properties[:name])
         # end
         #
         def accepts_hash_for(prop, *block)
@@ -30,24 +31,19 @@ module Neo4j
             setter = :"#{prop}="
             original_setter = :"#{prop}_without_accepting_hash="
 
-            define_method :"#{prop}_with_accepting_hash=" do |attributes|
+            define_method :"#{prop}_with_accepting_hash=" do |value|
+              # only call custom method if not already a model or nil.  This way we catch hash, mash, etc.
+              if !value.respond_to?(:properties) && !value.nil?
+                # not sure what would be to happen if a block were somehow to be given to the setter method
+                value = if block_given?
+                          yield value
+                        else
+                          # todo: allow find_or_create
+                          ((id = value[:id]) && rel.target_class.find(id)) || rel.target_class.new(value)
+                        end
+              end
 
-              node = if attributes.is_a? rel.target_class
-                       attributes
-                     elsif attributes.present?
-                       # not sure what would be to happen if a block were somehow to be given to the setter method
-                       if block_given?
-                         yield(attributes)
-                       else
-                         # todo: allow find_or_create
-
-                         ((id = attributes[:id]) && target_class.find(id)) || target_class.new(attributes)
-                       end
-                     else
-                       nil
-                     end
-
-              send(original_setter, node)
+              send(original_setter, value)
             end
 
             alias_method_chain setter, :accepting_hash
